@@ -13,6 +13,7 @@
 """
 
 
+import imageio
 from . import BaseSummary
 import torch
 import matplotlib.pyplot as plt
@@ -20,8 +21,8 @@ import numpy as np
 import os
 from PIL import Image
 
-cm = plt.get_cmap('plasma')
-
+cmap = 'jet'
+cm = plt.get_cmap(cmap)
 
 class NLSPNSummary(BaseSummary):
     def __init__(self, log_dir, mode, args, loss_name, metric_name):
@@ -126,8 +127,10 @@ class NLSPNSummary(BaseSummary):
             rgb_tmp = rgb[b, :, :, :]
             dep_tmp = dep[b, 0, :, :]
             gt_tmp = gt[b, 0, :, :]
-            pred_tmp = pred[b, 0, :, :]
+            pred_tmp = pred[b, 0, :, :] 
             confidence_tmp = confidence[b, 0, :, :]
+            
+            # norm = plt.Normalize(vmin=gt_tmp.min(), vmax=gt_tmp.max())
 
             dep_tmp = 255.0 * dep_tmp / self.args.max_depth
             gt_tmp = 255.0 * gt_tmp / self.args.max_depth
@@ -204,25 +207,30 @@ class NLSPNSummary(BaseSummary):
                 dep = dep[0, 0, :, :].data.cpu().numpy()
                 pred = pred[0, 0, :, :].data.cpu().numpy()
                 gt = gt[0, 0, :, :].data.cpu().numpy()
-
+                pred_gray = pred
+                max_depth = max(gt.max(), pred.max())
+                norm = plt.Normalize(vmin=gt.min(), vmax=gt.max())
+                rgb = np.transpose(rgb, (1, 2, 0))
+                '''
                 rgb = 255.0*np.transpose(rgb, (1, 2, 0))
                 dep = dep / self.args.max_depth
                 pred = pred / self.args.max_depth
                 pred_gray = pred
                 gt = gt / self.args.max_depth
-
+                
                 rgb = np.clip(rgb, 0, 256).astype('uint8')
                 dep = (255.0*cm(dep)).astype('uint8')
                 pred = (255.0*cm(pred)).astype('uint8')
                 pred_gray = (255.0*pred_gray).astype('uint8')
                 gt = (255.0*cm(gt)).astype('uint8')
-
+                
+                rgb = np.clip(rgb, 0, 256).astype('uint8')
                 rgb = Image.fromarray(rgb, 'RGB')
                 dep = Image.fromarray(dep[:, :, :3], 'RGB')
                 pred = Image.fromarray(pred[:, :, :3], 'RGB')
                 pred_gray = Image.fromarray(pred_gray)
                 gt = Image.fromarray(gt[:, :, :3], 'RGB')
-
+                '''
                 feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
                 feat_init = feat_init / self.args.max_depth
                 feat_init = (255.0*cm(feat_init)).astype('uint8')
@@ -243,19 +251,58 @@ class NLSPNSummary(BaseSummary):
 
                 path_save_rgb = '{}/01_rgb.png'.format(self.path_output)
                 path_save_dep = '{}/02_dep.png'.format(self.path_output)
+
+                '''
                 path_save_init = '{}/03_pred_init.png'.format(self.path_output)
                 path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
-                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(
-                    self.path_output)
+                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(self.path_output)
                 path_save_gt = '{}/06_gt.png'.format(self.path_output)
+                '''
 
+                path_save_pred = '{}/03_pred_final.png'.format(self.path_output)
+                path_save_pred_gray = '{}/03_pred_final_gray.png'.format(
+                    self.path_output)
+                path_save_gt = '{}/04_gt.png'.format(self.path_output)
+
+                '''
+                顔色界限不明显
                 rgb.save(path_save_rgb)
                 dep.save(path_save_dep)
                 pred.save(path_save_pred)
                 pred_gray.save(path_save_pred_gray)
                 feat_init.save(path_save_init)
                 gt.save(path_save_gt)
+                feat_init.save(path_save_init)
+                '''
+                
+                plt.imsave(path_save_rgb, rgb, cmap=cmap)
+                plt.imsave(path_save_gt, cm(norm(gt)))
+                plt.imsave(path_save_pred, cm(norm(pred)))
+                plt.imsave(path_save_pred_gray, pred_gray, cmap='gray')
+                plt.imsave(path_save_dep, cm(norm(dep)))
+                
+                
+                '''
+                # "生成16位图像"
 
+                pred_gray = pred_gray.astype(np.uint16)
+                pred = pred.astype(np.uint16)
+                gt = gt.astype(np.uint16)
+                
+                plt.imshow(pred, cmap='gray', vmin=0, vmax=10)
+                plt.colorbar()
+                plt.show()
+                
+                
+                imageio.imwrite(path_save_pred_gray, pred_gray)
+                imageio.imwrite(path_save_pred, pred)
+                imageio.imwrite(path_save_gt, gt)
+                '''
+                
+                
+
+                '''
+                # 生成一系列有序的文件名
                 for k in range(0, len(list_feat)):
                     path_save_inter = '{}/04_pred_prop_{:02d}.png'.format(
                         self.path_output, k)
@@ -265,3 +312,5 @@ class NLSPNSummary(BaseSummary):
                 np.save('{}/offset.npy'.format(self.path_output), offset)
                 np.save('{}/aff.npy'.format(self.path_output), aff)
                 np.save('{}/gamma.npy'.format(self.path_output), gamma)
+                '''
+                

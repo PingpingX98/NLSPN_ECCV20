@@ -17,9 +17,9 @@ import torch
 from . import BaseMetric
 
 
-class NLSPNMetric(BaseMetric):
+class NLSPNMetricnew(BaseMetric):
     def __init__(self, args):
-        super(NLSPNMetric, self).__init__(args)
+        super(NLSPNMetricnew, self).__init__(args)
 
         self.args = args
         self.t_valid = 0.0001
@@ -28,7 +28,7 @@ class NLSPNMetric(BaseMetric):
             'RMSE', 'MAE', 'iRMSE', 'iMAE', 'REL', 'D^1', 'D^2', 'D^3'
         ]
 
-    def evaluate(self, sample, output, mode=None):
+    def evaluate(self, sample, output, mode):
         with torch.no_grad():
             pred = output['pred'].detach()
             gt = sample['gt'].detach()
