@@ -17,18 +17,18 @@ import torch
 from . import BaseMetric
 
 
-class NLSPNMetric(BaseMetric):
+class NLSPNMetricnew(BaseMetric):
     def __init__(self, args):
-        super(NLSPNMetric, self).__init__(args)
+        super(NLSPNMetricnew, self).__init__(args)
 
         self.args = args
         self.t_valid = 0.0001
 
         self.metric_name = [
-            'RMSE', 'MAE', 'iRMSE', 'iMAE', 'REL', 'D^1', 'D^2', 'D^3'
+            'RMSE', 'MAE', 'iRMSE', 'iMAE', 'REL', 'D_1'
         ]
 
-    def evaluate(self, sample, output, mode=None):
+    def evaluate(self, sample, output, mode):
         with torch.no_grad():
             pred = output['pred'].detach()
             gt = sample['gt'].detach()
@@ -77,16 +77,19 @@ class NLSPNMetric(BaseMetric):
             r1 = gt / (pred + 1e-8)
             r2 = pred / (gt + 1e-8)
             ratio = torch.max(r1, r2)
+            # print(f"ratio is {ratio}")
 
-            del_1 = (ratio < 1.25).type_as(ratio)
+            """ del_1 = (ratio < 1.25).type_as(ratio)
             del_2 = (ratio < 1.25**2).type_as(ratio)
-            del_3 = (ratio < 1.25**3).type_as(ratio)
-
+            del_3 = (ratio < 1.25**3).type_as(ratio) """
+            del_1 = (ratio < 1.10).type_as(ratio)
+            
             del_1 = del_1.sum() / (num_valid + 1e-8)
-            del_2 = del_2.sum() / (num_valid + 1e-8)
-            del_3 = del_3.sum() / (num_valid + 1e-8)
+            """ del_2 = del_2.sum() / (num_valid + 1e-8)
+            del_3 = del_3.sum() / (num_valid + 1e-8) """
 
-            result = [rmse, mae, irmse, imae, rel, del_1, del_2, del_3]
+            # result = [rmse, mae, irmse, imae, rel, del_1, del_2, del_3]
+            result = [rmse, mae, irmse, imae, rel, del_1]
             result = torch.stack(result)
             result = torch.unsqueeze(result, dim=0).detach()
 

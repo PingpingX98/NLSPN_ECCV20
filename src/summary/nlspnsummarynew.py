@@ -1,35 +1,23 @@
-"""
-    Non-Local Spatial Propagation Network for Depth Completion
-    Jinsun Park, Kyungdon Joo, Zhe Hu, Chi-Kuei Liu and In So Kweon
-
-    European Conference on Computer Vision (ECCV), Aug 2020
-
-    Project Page : https://github.com/zzangjinsun/NLSPN_ECCV20
-    Author : Jinsun Park (zzangjinsun@kaist.ac.kr)
-
-    ======================================================================
-
-    NLSPNSummary implementation
-"""
-
-
-from . import BaseSummary
-import torch
-import matplotlib.pyplot as plt
-import numpy as np
-import os
 from PIL import Image
+from . import BaseSummary
+import imageio
+import matplotlib.pyplot as plt
+import torch
+import os
+import numpy as np
+import matplotlib.cm as mcm
+import matplotlib.colors as colors
 
-cm = plt.get_cmap('jet')
+cmap = 'jet'
+cm = plt.get_cmap(cmap)
 
-
-class NLSPNSummary(BaseSummary):
+class NLSPNSummarynew(BaseSummary):
     def __init__(self, log_dir, mode, args, loss_name, metric_name):
         assert mode in ['train', 'val', 'test'], \
             "mode should be one of ['train', 'val', 'test'] " \
             "but got {}".format(mode)
 
-        super(NLSPNSummary, self).__init__(log_dir, mode, args)
+        super(NLSPNSummarynew, self).__init__(log_dir, mode, args)
 
         self.log_dir = log_dir
         self.mode = mode
@@ -66,7 +54,7 @@ class NLSPNSummary(BaseSummary):
             print(msg)
 
             f_loss = open(self.f_loss, 'a')
-            f_loss.write('{:04d} | {}\n'.format(global_step, msg))
+            f_loss.write('{:05d} | {}\n'.format(global_step, msg))
             f_loss.close()
 
         if self.metric_name is not None:
@@ -78,7 +66,7 @@ class NLSPNSummary(BaseSummary):
                 val = self.metric[0, idx]
                 self.add_scalar('Metric/' + name, val, global_step)
 
-                msg += ["{:<s}: {:.4f}  ".format(name, val)]
+                msg += ["{:<s}: {:.5f}  ".format(name, val)]
 
                 if (idx + 1) % 10 == 0:
                     msg += ["\n             "]
@@ -87,7 +75,7 @@ class NLSPNSummary(BaseSummary):
             print(msg)
 
             f_metric = open(self.f_metric, 'a')
-            f_metric.write('{:04d} | {}\n'.format(global_step, msg))
+            f_metric.write('{:05d} | {}\n'.format(global_step, msg))
             f_metric.close()
 
         # Un-normalization
@@ -126,8 +114,10 @@ class NLSPNSummary(BaseSummary):
             rgb_tmp = rgb[b, :, :, :]
             dep_tmp = dep[b, 0, :, :]
             gt_tmp = gt[b, 0, :, :]
-            pred_tmp = pred[b, 0, :, :]
+            pred_tmp = pred[b, 0, :, :] 
             confidence_tmp = confidence[b, 0, :, :]
+            
+            # norm = plt.Normalize(vmin=gt_tmp.min(), vmax=gt_tmp.max())
 
             dep_tmp = 255.0 * dep_tmp / self.args.max_depth
             gt_tmp = 255.0 * gt_tmp / self.args.max_depth
@@ -162,15 +152,21 @@ class NLSPNSummary(BaseSummary):
         self.loss = []
         self.metric = []
 
-    def save(self, epoch, idx, sample, output):
+    def save(self, epoch, idx, sample, output, id_in_batch=0):
         with torch.no_grad():
             if self.args.save_result_only:
+                # print("Saving only result...")
                 self.path_output = '{}/{}/epoch{:04d}'.format(self.log_dir,
                                                               self.mode, epoch)
+                
                 os.makedirs(self.path_output, exist_ok=True)
-
-                path_save_pred = '{}/{:010d}.png'.format(self.path_output, idx)
-
+                path_save_pred = os.path.join(self.path_output, 'depth')
+                path_save_color = os.path.join(self.path_output, 'depthcolor')
+                os.makedirs(path_save_pred, exist_ok=True)
+                os.makedirs(path_save_color, exist_ok=True)
+                path_save_pred = '{}/{:08d}.png'.format(path_save_pred, idx)
+                path_save_color = '{}/{:08d}.png'.format(path_save_color, idx)
+                
                 pred = output['pred'].detach()
 
                 pred = torch.clamp(pred, min=0)
@@ -178,90 +174,85 @@ class NLSPNSummary(BaseSummary):
                 pred = pred[0, 0, :, :].data.cpu().numpy()
 
                 pred = (pred*256.0).astype(np.uint16)
-                pred = Image.fromarray(pred)
-                pred.save(path_save_pred)
+                color_depth = self.ColorizeNew(pred, norm_type='LogNorm', offset=1.)
+                imageio.imwrite(path_save_pred, pred)
+                imageio.imwrite(path_save_color, color_depth)
             else:
-                # Parse data
-                guidance = output['guidance'].data.cpu().numpy()
-                offset = output['offset'].data.cpu().numpy()
-                aff = output['aff'].data.cpu().numpy()
-                gamma = output['gamma'].data.cpu().numpy()
-                feat_init = output['pred_init']
-                list_feat = output['pred_inter']
-
                 rgb = sample['rgb'].detach()
                 dep = sample['dep'].detach()
                 pred = output['pred'].detach()
                 gt = sample['gt'].detach()
 
                 pred = torch.clamp(pred, min=0)
-
+                
                 # Un-normalization
-                rgb.mul_(self.img_std.type_as(rgb)).add_(
-                    self.img_mean.type_as(rgb))
-
+                rgb.mul_(self.img_std.type_as(rgb)).add_(self.img_mean.type_as(rgb))
+                
                 rgb = rgb[0, :, :, :].data.cpu().numpy()
                 dep = dep[0, 0, :, :].data.cpu().numpy()
                 pred = pred[0, 0, :, :].data.cpu().numpy()
+                # print("pred min:", pred.min(), "max:", pred.max(), "dtype:", pred.dtype)
                 gt = gt[0, 0, :, :].data.cpu().numpy()
+                rgb = np.transpose(rgb, (1, 2, 0))
+                pred_uint16 = (pred * 256).astype(np.uint16)  # 若 pred 为0-255范围
+                
+                pred_final = pred
+                
 
-                rgb = 255.0*np.transpose(rgb, (1, 2, 0))
-                dep = dep / self.args.max_depth
-                pred = pred / self.args.max_depth
-                pred_gray = pred
-                gt = gt / self.args.max_depth
-
-                rgb = np.clip(rgb, 0, 256).astype('uint8')
-                dep = (255.0*cm(dep)).astype('uint8')
-                pred = (255.0*cm(pred)).astype('uint8')
-                pred_gray = (255.0*pred_gray).astype('uint8')
-                gt = (255.0*cm(gt)).astype('uint8')
-
-                rgb = Image.fromarray(rgb, 'RGB')
-                dep = Image.fromarray(dep[:, :, :3], 'RGB')
-                pred = Image.fromarray(pred[:, :, :3], 'RGB')
-                pred_gray = Image.fromarray(pred_gray)
-                gt = Image.fromarray(gt[:, :, :3], 'RGB')
-
-                feat_init = feat_init[0, 0, :, :].data.cpu().numpy()
-                feat_init = feat_init / self.args.max_depth
-                feat_init = (255.0*cm(feat_init)).astype('uint8')
-                feat_init = Image.fromarray(feat_init[:, :, :3], 'RGB')
-
-                for k in range(0, len(list_feat)):
-                    feat_inter = list_feat[k]
-                    feat_inter = feat_inter[0, 0, :, :].data.cpu().numpy()
-                    feat_inter = feat_inter / self.args.max_depth
-                    feat_inter = (255.0*cm(feat_inter)).astype('uint8')
-                    feat_inter = Image.fromarray(feat_inter[:, :, :3], 'RGB')
-
-                    list_feat[k] = feat_inter
-
+                norm = plt.Normalize(vmin=gt.min(), vmax=gt.max())
+            
                 self.path_output = '{}/{}/epoch{:04d}/{:08d}'.format(
                     self.log_dir, self.mode, epoch, idx)
                 os.makedirs(self.path_output, exist_ok=True)
-
+                
                 path_save_rgb = '{}/01_rgb.png'.format(self.path_output)
                 path_save_dep = '{}/02_dep.png'.format(self.path_output)
-                path_save_init = '{}/03_pred_init.png'.format(self.path_output)
-                path_save_pred = '{}/05_pred_final.png'.format(self.path_output)
-                path_save_pred_gray = '{}/05_pred_final_gray.png'.format(
+                path_save_pred = '{}/03_pred.png'.format(
                     self.path_output)
-                path_save_gt = '{}/06_gt.png'.format(self.path_output)
+                path_save_pred_visual = '{}/04_pred_final.png'.format(
+                    self.path_output)
+                    
+                # transfer to 16-bit
+                pred = pred.astype(np.uint16)
+                #imageio.imwrite(path_save_rgb, rgb)
+                plt.imsave(path_save_rgb, rgb, cmap=cmap)
+                plt.imsave(path_save_dep, cm(norm(dep)))
+                # imageio.imwrite(path_save_pred, pred)
+                imageio.imwrite(path_save_pred, pred_uint16, format='PNG')
+                plt.imsave(path_save_pred_visual, cm(norm(pred_final)))
+                           
+    def ColorizeNew(self, depth, norm_type='LogNorm', offset=1.):
+        cmap = mcm.jet
+        depth = (depth - depth.min()) / (depth.max() - depth.min()) + offset
+        Norm = getattr(colors, norm_type)
+        norm = Norm(vmin=depth.min(), vmax=depth.max(), clip=True)
+        m = mcm.ScalarMappable(norm=norm, cmap=cmap)
+        depth_color = (255 * m.to_rgba(depth)[:, :, 0:3]).astype(np.uint8)
+        return depth_color                   
+    
+    def log_time(self, epoch, t_total, t_avg,
+                 t_bench_avg, t_bench_total):
+        """ 
+        # 1) TensorBoard
+        self.add_scalar('Time/Total_elapsed',   t_total,        epoch)
+        self.add_scalar('Time/Avg_traditional', t_avg,          epoch)
+        self.add_scalar('Time/Avg_benchmark',   t_bench_avg,    epoch)
+        self.add_scalar('Time/Total_benchmark', t_bench_total,  epoch) """
 
-                rgb.save(path_save_rgb)
-                dep.save(path_save_dep)
-                pred.save(path_save_pred)
-                pred_gray.save(path_save_pred_gray)
-                feat_init.save(path_save_init)
-                gt.save(path_save_gt)
+        with open(self.f_metric, 'a') as f:
+            f.write(f'{epoch:05d} | '
+                    f'Total_elapsed={t_total:.6f}  '
+                    f'Avg_traditional={t_avg:.6f}  '
+                    f'Avg_benchmark={t_bench_avg:.6f}  '
+                    f'Total_benchmark={t_bench_total:.6f}\n')
 
-                for k in range(0, len(list_feat)):
-                    path_save_inter = '{}/04_pred_prop_{:02d}.png'.format(
-                        self.path_output, k)
-                    list_feat[k].save(path_save_inter)
-
-                np.save('{}/guidance.npy'.format(self.path_output), guidance)
-                np.save('{}/offset.npy'.format(self.path_output), offset)
-                np.save('{}/aff.npy'.format(self.path_output), aff)
-                np.save('{}/gamma.npy'.format(self.path_output), gamma)
+        self.flush()
+    
+    def colorize(self, depth, gt, percentile=1):
+        cmap = mcm.jet
+        vmin = np.percentile(gt, percentile)
+        vmax = gt.max()
+        norm = plt.Normalize(vmin=vmin, vmax=vmax)
+        m = mcm.ScalarMappable(norm=norm, cmap=cmap)
+        depth_color = (255 * m.to_rgba(depth)[:, :, :3]).astype(np.uint8)
+        return depth_color

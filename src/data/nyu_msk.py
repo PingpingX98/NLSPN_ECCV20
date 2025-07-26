@@ -1,4 +1,3 @@
-
 """
     Non-Local Spatial Propagation Network for Depth Completion
     Jinsun Park, Kyungdon Joo, Zhe Hu, Chi-Kuei Liu and In So Kweon
@@ -25,6 +24,7 @@ from PIL import Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as TF
+from .nyu_sample import uniform_sample1, uniform_sample2, uniform_sample3
 
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -54,20 +54,20 @@ Reference : https://github.com/XinJCheng/CSPN/blob/master/nyu_dataset_loader.py
 
 
 class NYU(BaseDataset):
-    def __init__(self, args, mode):
+    def __init__(self, args, mode, num_mask=8):
         super(NYU, self).__init__(args, mode)
 
         self.args = args
         self.mode = mode
+        self.num_mask = num_mask
 
         if mode != 'train' and mode != 'val' and mode != 'test':
             raise NotImplementedError
 
         # For NYUDepthV2, crop size is fixed
-        height, width = (256, 320)
-        # crop_size = (228, 304)
-        crop_size = (256, 320)
-        
+        height, width = (240, 320)
+        crop_size = (228, 304)
+
         self.height = height
         self.width = width
         self.crop_size = crop_size
@@ -87,9 +87,11 @@ class NYU(BaseDataset):
             self.sample_list = json_data[mode]
 
     def __len__(self):
-        return len(self.sample_list)
+        return self.num_mask*len(self.sample_list)
 
     def __getitem__(self, idx):
+        seed = idx % self.num_mask
+        idx = idx // self.num_mask
         path_file = os.path.join(self.args.dir_data,
                                  self.sample_list[idx]['filename'])
 
@@ -110,8 +112,8 @@ class NYU(BaseDataset):
                 rgb = TF.hflip(rgb)
                 dep = TF.hflip(dep)
 
-            rgb = TF.rotate(rgb, angle=degree, resample=Image.NEAREST)
-            dep = TF.rotate(dep, angle=degree, resample=Image.NEAREST)
+            rgb = TF.rotate(rgb, angle=degree, interpolation=Image.Resampling.NEAREST)
+            dep = TF.rotate(dep, angle=degree, interpolation=Image.Resampling.NEAREST)
 
             t_rgb = T.Compose([
                 T.Resize(scale),
@@ -156,8 +158,9 @@ class NYU(BaseDataset):
 
             K = self.K.clone()
 
-        dep_sp = self.get_sparse_depth(dep, self.args.num_sample)
-
+        # dep_sp = self.get_sparse_depth(dep, self.args.num_sample)
+        # dep_sp = self.get_sparse_depth(dep, self.args.num_sample)
+        dep_sp = self.mask_sparse_depth(dep, self.args.num_sample, seed)
         output = {'rgb': rgb, 'dep': dep_sp, 'gt': dep, 'K': K}
 
         return output
@@ -170,7 +173,8 @@ class NYU(BaseDataset):
         idx_nnz = torch.nonzero(dep.view(-1) > 0.0001, as_tuple=False)
 
         num_idx = len(idx_nnz)
-        idx_sample = torch.randperm(num_idx)[:num_sample]
+        
+        idx_sample = torch.randperm(num_idx)[:num_sample]   # 随机采样
 
         idx_nnz = idx_nnz[idx_sample[:]]
 
@@ -181,3 +185,22 @@ class NYU(BaseDataset):
         dep_sp = dep * mask.type_as(dep)
 
         return dep_sp
+    
+    def mask_sparse_depth(self, dep, num_sample, seed):
+        channel, height, width = dep.shape
+        dep = dep.numpy().reshape(-1)
+        np.random.seed(seed)
+        index = np.random.choice(height * width, num_sample, replace=False)
+        dep_sp = np.zeros_like(dep)
+        dep_sp[index] = dep[index]
+        dep_sp = dep_sp.reshape(channel, height, width)
+        dep_sp = torch.from_numpy(dep_sp)
+        return dep_sp
+
+
+           
+
+
+    
+
+        

@@ -47,7 +47,7 @@ import apex
 from apex.parallel import DistributedDataParallel as DDP
 from apex import amp
 import pandas as pd
-
+import torch.utils.benchmark as benchmark
 # Minimize randomness
 torch.manual_seed(args_config.seed)
 np.random.seed(args_config.seed)
@@ -323,32 +323,24 @@ def train(gpu, args):
 
 def test(args):
     # Prepare dataset
-    
     data = get_data(args)
-
     data_test = data(args, 'test')
-    # print(f"len is {len(args)}")
-
     loader_test = DataLoader(dataset=data_test, batch_size=1,
                              shuffle=False, num_workers=args.num_threads)
 
     # Network
-    model = get_model(args) # NLSPN model, 得到模型output
+    model = get_model(args)
     net = model(args)
     net.cuda()
 
     if args.pretrain is not None:
-        assert os.path.exists(args.pretrain), \
-            "file not found: {}".format(args.pretrain)
-
+        assert os.path.exists(args.pretrain), "file not found: {}".format(args.pretrain)
         f = open(args.pretrain, 'rb')
         checkpoint = torch.load(f, encoding='latin1')
         key_m, key_u = net.load_state_dict(checkpoint['net'], strict=False)
-
         if key_u:
             print('Unexpected keys :')
             print(key_u)
-
         if key_m:
             print('Missing keys :')
             print(key_m)
@@ -356,14 +348,9 @@ def test(args):
 
     net = nn.DataParallel(net)
 
-    """ metric = get_metric(args)
-    metric = metric(args)
-    summary = get_summary(args) """
-
     metric16bit = get_metric16bit(args)
     metric16bit = metric16bit(args)
     summary16bit = get_summary16bit(args)
-    
 
     try:
         os.makedirs(args.save_dir, exist_ok=True)
@@ -371,53 +358,54 @@ def test(args):
     except OSError:
         pass
 
-    # writer_test = summary(args.save_dir, 'test', args, None, metric.metric_name)
     writer_test_new = summary16bit(args.save_dir, 'test', args, None, metric16bit.metric_name)
 
     net.eval()
 
-    num_sample = len(loader_test)*loader_test.batch_size
+    num_sample = len(loader_test) * loader_test.batch_size
 
-    pbar = tqdm(total=num_sample)   # 进度条
+    pbar = tqdm(total=num_sample)
 
-    t_total = 0
+    # 新增 torch.utils.benchmark.Timer 相关代码
+    # 创建 Timer 计时器，命令字符串是 net(sample) ，
+    # 但这里 sample 需要是准备好的CUDA tensor，我们在循环里动态赋值，所以先占位
+    # 这里我们改用循环内创建Timer（更准确），或者用 timeit.Timer 动态测试
+
+    t_total = 0.0
+    times = []
 
     for batch, sample in enumerate(loader_test):
-        sample = {key: val.cuda() for key, val in sample.items()
-                  if val is not None}
+        sample = {key: val.cuda() for key, val in sample.items() if val is not None}
 
+        timer = benchmark.Timer(
+            stmt='net(sample)',
+            globals={'net': net, 'sample': sample}
+        )
+        
+        measured_time = timer.timeit(1000).mean
+        print(f"{measured_time} sec")
+        break
+
+        # 传统时间测量对比
         t0 = time.time()
         output = net(sample)
         t1 = time.time()
-
         t_total += (t1 - t0)
-
-        """ metric_val = metric.evaluate(sample, output, 'train')
-        writer_test.add(None, metric_val) """
 
         metric_val_new = metric16bit.evaluate(sample, output, 'train')
         writer_test_new.add(None, metric_val_new)
-        
-        # Save data for analysis
+
         if args.save_result_only:
-            # writer_test.save(args.epochs, batch, sample, output) # don't use this, use following
             writer_test_new.save(args.epochs, batch, sample, output)
 
         current_time = time.strftime('%y%m%d@%H:%M:%S')
-        error_str = '{} | Test'.format(current_time)
+        error_str = '{} | Test | Timer average: {:.6f} s'.format(current_time, measured_time)
         pbar.set_description(error_str)
         pbar.update(loader_test.batch_size)
 
     pbar.close()
 
-    # writer_test.update(args.epochs, sample, output)
-    writer_test_new.update(args.epochs, sample, output)
-
-    t_avg = t_total / num_sample
-    print('Elapsed time : {} sec, '
-          'Average processing time : {} sec'.format(t_total, t_avg))
     
-
 def main(args):
     if not args.test_only:
         if args.no_multiprocessing:
