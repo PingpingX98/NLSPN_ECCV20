@@ -230,6 +230,10 @@ parser.add_argument('--no_warm_up',
                     help='no lr warm up')
 
 # Logs
+parser.add_argument('--log_dir',
+                    type=str,
+                    default='../experiments/',
+                    help='dir for log')
 parser.add_argument('--save',
                     type=str,
                     default='trial',
@@ -254,5 +258,5 @@ args = parser.parse_args()
 args.num_gpus = len(args.gpus.split(','))
 
 current_time = time.strftime('%y%m%d_%H%M%S_')
-save_dir = '../experiments/' + current_time + args.save
+save_dir = args.log_dir  + current_time + args.save
 args.save_dir = save_dir
