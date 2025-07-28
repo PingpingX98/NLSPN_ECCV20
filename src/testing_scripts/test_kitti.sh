@@ -9,7 +9,6 @@ do
   --num_sample 0 --test_only --pretrain $ckpt \
   --preserve_input --legacy  \
   --lidar_lines $lidar_lines \
-  --top_crop 96 \
   --log_dir /data/compare/metric/NLSPN/experiments/ \
   --save "val_kitti_lines${lidar_lines}" \
   --save_result_only
