@@ -174,6 +174,10 @@ parser.add_argument('--num_sample',
                     default=500,
                     # default=0,
                     help='number of sparse samples')
+parser.add_argument('--lidar_lines',
+                    type=int,
+                    default=64,
+                    help='the extracted lidar lines')
 parser.add_argument('--test_crop',
                     action='store_true',
                     default=False,
