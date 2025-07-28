@@ -13,7 +13,7 @@ do
     --log_dir /data/compare/metric/NLSPN/experiments/ \
     --preserve_input --batch_size 1 \
     --save "test_nyu_sample${sample}_inference" \
-    --legacy \
+    --legacy 
 done
 
 
