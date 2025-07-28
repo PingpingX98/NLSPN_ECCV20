@@ -30,6 +30,12 @@ def get(args):
 
     return getattr(module, summary_name)
 
+def getNew(args):
+    summary_name = args.model_name + 'Summarynew'
+    module_name = 'summary.' + summary_name.lower()
+    module = import_module(module_name)
+
+    return getattr(module, summary_name)
 
 class BaseSummary(SummaryWriter):
     def __init__(self, log_dir, mode, args):
