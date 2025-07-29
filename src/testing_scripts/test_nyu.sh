@@ -24,7 +24,7 @@ for sample in 500
 # done
 
 do
-python main_time.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_json ../data_json/nyu.json \
+python main_memory.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_json ../data_json/nyu.json \
     --gpus 0 --max_depth 10.0 --num_sample $sample \
     --test_only --pretrain $ckpt \
     --log_dir /data/compare/metric/NLSPN/experiments/ \
