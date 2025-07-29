@@ -1,7 +1,4 @@
-GRU_iters=5
-test_augment=0
-optim_layer_input_clamp=1.0
-depth_activation_format='exp'
+
 ckpt=/home/descfly/Projects/NLSPN_ECCV20-master/results/NLSPN_NYU.pt
 # for sample in 5 50 100 200 300 400 500 
 # for sample in 1 5 50 100 200 500 1000 5000 20000
@@ -13,7 +10,7 @@ python main.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_
     --gpus 0 --max_depth 10.0 --num_sample 500 \
     --test_only  --pretrain $ckpt \
     --log_dir /data/compare/metric/NLSPN/experiments/ \
-    --save "test_nyu_sample${sample}_${noise_type}" --batch_size 1\
+    --save "test_nyu_sample${sample}_${noise_type}" --batch_size 1 \
     --add_noise --noise_type $noise_type \
     --save_result_only \
     --preserve_input \
