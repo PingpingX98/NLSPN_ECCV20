@@ -4,7 +4,7 @@ import numpy as np
 
 def add_noise(x, noise_type='gaussian', mask=None):
     if mask is None:
-        mash = x > 0
+        mask = x > 0
 
     if noise_type == 'gaussian':
         std = random.uniform(0.01, 0.2)
