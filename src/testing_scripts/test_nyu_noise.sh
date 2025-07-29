@@ -2,8 +2,7 @@ GRU_iters=5
 test_augment=0
 optim_layer_input_clamp=1.0
 depth_activation_format='exp'
-ckpt=/home/descfly/Projects/OGNI-DC-main/src/checkpoints/NYU_best_performance.pt
-
+ckpt=/home/descfly/Projects/NLSPN_ECCV20-master/results/NLSPN_NYU.pt
 # for sample in 5 50 100 200 300 400 500 
 # for sample in 1 5 50 100 200 500 1000 5000 20000
 # for sample in 1 5 50 100
