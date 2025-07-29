@@ -10,6 +10,6 @@ do
   --preserve_input --legacy  \
   --lidar_lines $lidar_lines \
   --log_dir /data/compare/metric/NLSPN/experiments/ \
-  --save "val_kitti_lines${lidar_lines}" \
+  --save "val_kitti_lines${lidar_lines}" --batch_size 1\
   --save_result_only
   done
