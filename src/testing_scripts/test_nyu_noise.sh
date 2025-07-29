@@ -6,7 +6,7 @@ ckpt=/home/descfly/Projects/NLSPN_ECCV20-master/results/NLSPN_NYU.pt
 # for sample in 300 400
 for noise_type in gaussian impulse rayleigh gamma exponential uniform
 do
-python main_memory.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_json ../data_json/nyu.json \
+python main.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_json ../data_json/nyu.json \
     --gpus 0 --max_depth 10.0 --num_sample 500 \
     --test_only --pretrain $ckpt \
     --log_dir /data/compare/metric/NLSPN/experiments/ \
