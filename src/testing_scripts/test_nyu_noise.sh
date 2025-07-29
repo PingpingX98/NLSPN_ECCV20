@@ -10,7 +10,7 @@ python main.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_
     --gpus 0 --max_depth 10.0 --num_sample 500 \
     --test_only  --pretrain $ckpt \
     --log_dir /data/compare/metric/NLSPN/experiments/ \
-    --save "test_nyu_sample${sample}_${noise_type}" --batch_size 1 \
+    --save "test_nyu_${noise_type}" --batch_size 1 \
     --add_noise --noise_type $noise_type \
     --save_result_only \
     --preserve_input \
