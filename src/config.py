@@ -255,7 +255,15 @@ parser.add_argument('--save_result_only',
                     action='store_true',
                     default=False,
                     help='save result images only with submission format')
-
+# noise
+parser.add_argument('--add_noise',
+                     action='store_true', 
+                     default=True,
+                     help='Add noise to sparse depth')
+parser.add_argument('--noise_type', 
+                    default='gaussian', 
+                    choices=['gaussian', 'impulse', 'rayleigh', 'gamma', 'exponential', 'uniform'], 
+                    help='Type of noise to add')
 
 args = parser.parse_args()
 
