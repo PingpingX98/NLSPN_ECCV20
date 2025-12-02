@@ -264,6 +264,10 @@ parser.add_argument('--noise_type',
                     default='gaussian', 
                     choices=['gaussian', 'impulse', 'rayleigh', 'gamma', 'exponential', 'uniform'], 
                     help='Type of noise to add')
+parser.add_argument('--noise_level', 
+                    type=float,
+                    default=1,
+                    help='Add noise to sparse depth')
 
 args = parser.parse_args()
 
