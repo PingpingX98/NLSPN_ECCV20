@@ -258,7 +258,7 @@ parser.add_argument('--save_result_only',
 # noise
 parser.add_argument('--add_noise',
                      action='store_true', 
-                     default=True,
+                     default=False,
                      help='Add noise to sparse depth')
 parser.add_argument('--noise_type', 
                     default='gaussian', 
