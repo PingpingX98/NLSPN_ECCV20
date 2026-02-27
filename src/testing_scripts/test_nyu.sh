@@ -1,5 +1,5 @@
 
-ckpt=/home/descfly/Projects/NLSPN_ECCV20-master/results/NLSPN_NYU.pt
+ckpt=../checkpoints/NLSPN_NYU.pt
 
 # for sample in 1 5 50 100 200 300 400 500 
 # for sample in 1 50 100 200 500 
@@ -22,9 +22,13 @@ ckpt=/home/descfly/Projects/NLSPN_ECCV20-master/results/NLSPN_NYU.pt
 #    # --save_full --save_image
 #    # --save_full --save_pointcloud_visualization
 #done
-python main.py --dir_data ../datas/nyudepthv2 --data_name NYU  --split_json ../data_json/nyu.json \
-    --patch_height 228 --patch_width 304 --gpus 0,1,2,3 --max_depth 10.0 --num_sample 500 \
-    --test_only --pretrain ../checkpoints/NLSPN_NYU.pt --preserve_input --save NAME_TO_SAVE --legacy
+for sample in 1 5
+do 
+    python main.py --dir_data ../datas/nyudepthv2 --data_name NYU  --split_json ../data_json/nyu.json \
+    --patch_height 228 --patch_width 304 --gpus 0 --max_depth 10.0 --num_sample $sample \
+    --test_only --pretrain $ckpt --preserve_input --save_result_only --legacy \
+    --log_dir ../datas/nlspn/experiments/${sample}/
+done
 
 # do
 # python main_memory.py --dir_data /home/descfly/data/nyudepthv2 --data_name NYU --split_json ../data_json/nyu.json \

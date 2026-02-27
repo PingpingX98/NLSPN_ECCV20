@@ -366,13 +366,13 @@ def test(args):
     
 
     try:
-        os.makedirs(args.save_dir, exist_ok=True)
-        os.makedirs(args.save_dir + '/test', exist_ok=True)
+        os.makedirs(args.log_dir, exist_ok=True)
+        os.makedirs(args.log_dir + '/test', exist_ok=True)
     except OSError:
         pass
 
     # writer_test = summary(args.save_dir, 'test', args, None, metric.metric_name)
-    writer_test_new = summary16bit(args.save_dir, 'test', args, None, metric16bit.metric_name)
+    writer_test_new = summary16bit(args.log_dir, 'test', args, None, metric16bit.metric_name)
 
     net.eval()
 
