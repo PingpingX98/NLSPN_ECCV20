@@ -162,22 +162,38 @@ class NLSPNSummarynew(BaseSummary):
                 os.makedirs(self.path_output, exist_ok=True)
                 path_save_pred = os.path.join(self.path_output, 'depth')
                 path_save_color = os.path.join(self.path_output, 'depthcolor')
+                path_save_init_depth = os.path.join(self.path_output, 'initdepthcolor')
+                path_save_sp = os.path.join(self.path_output, 'spcolor')
                 os.makedirs(path_save_pred, exist_ok=True)
                 os.makedirs(path_save_color, exist_ok=True)
+                os.makedirs(path_save_init_depth, exist_ok=True)
+                os.makedirs(path_save_sp, exist_ok=True)
                 path_save_pred = '{}/{:08d}.png'.format(path_save_pred, idx)
                 path_save_color = '{}/{:08d}.png'.format(path_save_color, idx)
+                path_save_init_depth = '{}/{:08d}.png'.format(path_save_init_depth, idx)
+                path_save_sp = '{}/{:08d}.png'.format(path_save_sp, idx)
                 
                 pred = output['pred'].detach()
-
                 pred = torch.clamp(pred, min=0)
-
                 pred = pred[0, 0, :, :].data.cpu().numpy()
-
                 pred = (pred*256.0).astype(np.uint16)
+
+                pred_init = output['pred_init'].detach()
+                pred_init = torch.clamp(pred_init, min=0)
+                pred_init = pred_init[0, 0, :, :].data.cpu().numpy()
+                init_color = self.Colorize(pred_init, min_distance=pred_init[pred_init > 0].min(), max_distance=pred_init.max())
+                # pred = (pred_init*256.0).astype(np.uint16)
                 # color_depth = self.Colorize(pred, norm_type='LogNorm', offset=1.)
                 color_depth = self.Colorize(pred, min_distance=pred[pred > 0].min(), max_distance=pred.max())
+                
+                sp = sample['dep'].detach()
+                sp = torch.clamp(sp, min=0)
+                sp = sp[0, 0, :, :].data.cpu().numpy()
+                sp_color = self.Colorize(sp, min_distance=sp[sp > 0].min(), max_distance=sp.max())
                 imageio.imwrite(path_save_pred, pred)
                 imageio.imwrite(path_save_color, color_depth)
+                imageio.imwrite(path_save_init_depth, init_color)
+                imageio.imwrite(path_save_sp, sp_color)
             else:
                 rgb = sample['rgb'].detach()
                 dep = sample['dep'].detach()

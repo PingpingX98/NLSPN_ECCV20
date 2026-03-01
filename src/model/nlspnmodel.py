@@ -318,7 +318,7 @@ class NLSPNModel(nn.Module):
     def forward(self, sample):
         rgb = sample['rgb']
         dep = sample['dep']
-
+        mask_sample = sample['mask_sample']
         # Encoding
         fe1_rgb = self.conv1_rgb(rgb)
         fe1_dep = self.conv1_dep(dep)
@@ -340,6 +340,10 @@ class NLSPNModel(nn.Module):
         # Init Depth Decoding
         id_fd1 = self.id_dec1(self._concat(fd2, fe2))
         pred_init = self.id_dec0(self._concat(id_fd1, fe1))
+
+        # xpp
+        if self.args.change_init:
+            pred_init = pred_init * mask_sample
 
         # Guidance Decoding
         gd_fd1 = self.gd_dec1(self._concat(fd2, fe2))

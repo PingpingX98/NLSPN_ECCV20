@@ -251,6 +251,10 @@ parser.add_argument('--save_image',
                     action='store_true',
                     default=False,
                     help='save images for test')
+parser.add_argument('--change_init',
+                    action='store_true',
+                    default=False,
+                    help='mask sample * init depth')
 parser.add_argument('--save_result_only',
                     action='store_true',
                     default=False,

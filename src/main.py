@@ -47,7 +47,7 @@ import apex
 from apex.parallel import DistributedDataParallel as DDP
 from apex import amp
 import pandas as pd
-
+import pdb 
 # Minimize randomness
 torch.manual_seed(args_config.seed)
 np.random.seed(args_config.seed)
@@ -333,7 +333,7 @@ def test(args):
                              shuffle=False, num_workers=args.num_threads)
 
     # Network
-    model = get_model(args) # NLSPN model, 得到模型output
+    model = get_model(args)
     net = model(args)
     net.cuda()
 
@@ -384,8 +384,8 @@ def test(args):
 
     for batch, sample in enumerate(loader_test):
         sample = {key: val.cuda() for key, val in sample.items()
-                  if val is not None}
-
+                  if val is not None}                 
+        
         t0 = time.time()
         output = net(sample)
         t1 = time.time()
