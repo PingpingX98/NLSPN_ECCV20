@@ -318,7 +318,6 @@ class NLSPNModel(nn.Module):
     def forward(self, sample):
         rgb = sample['rgb']
         dep = sample['dep']
-        mask_sample = sample['mask_sample']
         # Encoding
         fe1_rgb = self.conv1_rgb(rgb)
         fe1_dep = self.conv1_dep(dep)
@@ -343,6 +342,7 @@ class NLSPNModel(nn.Module):
 
         # xpp
         if self.args.change_init:
+            mask_sample = sample['mask_sample']
             pred_init = pred_init * mask_sample
 
         # Guidance Decoding

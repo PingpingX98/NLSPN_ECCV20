@@ -22,12 +22,12 @@ ckpt=../checkpoints/NLSPN_NYU.pt
 #    # --save_full --save_image
 #    # --save_full --save_pointcloud_visualization
 #done
-for sample in 10
+for sample in 1
 do 
     python main.py --dir_data ../datas/nyudepthv2 --data_name NYU  --split_json ../data_json/nyu.json \
     --patch_height 228 --patch_width 304 --gpus 0 --max_depth 10.0 --num_sample $sample \
     --test_only --pretrain $ckpt --preserve_input --save_result_only --legacy \
-    --log_dir ../experiments/${sample}_maskinit/ 
+    --log_dir ../experiments/test/${sample}/ 
 done
 
 # do

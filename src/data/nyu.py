@@ -19,7 +19,7 @@ import numpy as np
 import json
 import h5py
 from . import BaseDataset
-
+import random
 from PIL import Image
 import torch
 import torchvision.transforms as T
@@ -55,7 +55,7 @@ Reference : https://github.com/XinJCheng/CSPN/blob/master/nyu_dataset_loader.py
 
 
 class NYU(BaseDataset):
-    def __init__(self, args, mode, num_mask=1):
+    def __init__(self, args, mode, num_mask=8):
         super(NYU, self).__init__(args, mode)
 
         self.args = args
@@ -164,13 +164,13 @@ class NYU(BaseDataset):
         # dep_sp = self.get_sparse_depth(dep, self.args.num_sample)
         # dep_sp = self.get_sparse_depth(dep, self.args.num_sample)
         dep_sp = self.mask_sparse_depth(dep, self.args.num_sample, seed)
-        mask_sample = self.get_mask_sample(dep_sp, k=3)
+        # mask_sample = self.get_mask_sample(dep_sp, k=1)
 
         
         # dep_sp, noise_info = diff_level_noise(dep_sp, mask=None, noise_level=self.args.noise_level)
         # dep_sp = diff_level_noise_mul(dep_sp, mask=None, noise_level=self.args.noise_level)
         # print(f"noise info is {noise_info}")
-        output = {'rgb': rgb, 'dep': dep_sp, 'gt': dep, 'K': K, 'mask_sample': mask_sample}
+        output = {'rgb': rgb, 'dep': dep_sp, 'gt': dep, 'K': K}
 
         return output
     
