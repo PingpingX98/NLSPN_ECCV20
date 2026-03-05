@@ -55,21 +55,22 @@ Reference : https://github.com/XinJCheng/CSPN/blob/master/nyu_dataset_loader.py
 
 
 class NYU(BaseDataset):
-    def __init__(self, args, mode, num_mask=8):
+    def __init__(self, args, mode, num_mask=1, fix_seed=False):
         super(NYU, self).__init__(args, mode)
 
         self.args = args
         self.mode = mode
         self.num_mask = num_mask
+        self.fix_seed = fix_seed
 
         if mode != 'train' and mode != 'val' and mode != 'test':
             raise NotImplementedError
 
         # For NYUDepthV2, crop size is fixed
-        # height, width = (240, 320)
-        # crop_size = (228, 304)
-        height, width = (256, 320)
-        crop_size = (256, 320)
+        height, width = (240, 320)
+        crop_size = (228, 304)
+        # height, width = (256, 320)
+        # crop_size = (256, 320)
 
         self.height = height
         self.width = width
@@ -94,6 +95,8 @@ class NYU(BaseDataset):
 
     def __getitem__(self, idx):
         seed = idx % self.num_mask
+        if self.fix_seed:
+            seed = 666
         idx = idx // self.num_mask
         path_file = os.path.join(self.args.dir_data,
                                  self.sample_list[idx]['filename'])
@@ -206,7 +209,7 @@ class NYU(BaseDataset):
         return dep_sp
     
     def mask_sparse_depth(self, dep, num_sample, seed):
-        print(f"seed is {seed}")
+        # print(f"seed is {seed}")
         channel, height, width = dep.shape
         dep = dep.numpy().reshape(-1)
         np.random.seed(seed)

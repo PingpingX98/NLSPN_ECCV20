@@ -25,6 +25,7 @@ services:
       - ./:/root/nlspn
       - /mnt/data/nyudepthv2:/root/nlspn/datas/nyudepthv2
       - /mnt/checkpoints/nlspn:/root/nlspn/checkpoints
+      - /mnt/data/void_release:/root/nlspn/datas/void
       # - /home/jie/data/NYUV2_depth/nyudepthv2:/root/NEAT/datas/nyudepthv2
     working_dir: /root/nlspn
 

@@ -7,6 +7,7 @@ import os
 import numpy as np
 import matplotlib.cm as mcm
 import matplotlib.colors as colors
+import cv2
 # import matplotlib.cm as cm
 cmap = 'jet'
 cm = plt.get_cmap(cmap)
@@ -178,19 +179,19 @@ class NLSPNSummarynew(BaseSummary):
                 pred = pred[0, 0, :, :].data.cpu().numpy()
                 pred = (pred*256.0).astype(np.uint16)
 
-                gt = sample['dep'][0,0].detach().cpu().numpy()
                 pred_init = output['pred_init'].detach()
                 pred_init = torch.clamp(pred_init, min=0)
                 pred_init = pred_init[0, 0, :, :].data.cpu().numpy()
                 init_color = self.Colorize(pred_init, min_distance=pred_init[pred_init > 0].min(), max_distance=pred_init.max())
+                # spcolor = self.Colorize(sp, min_distance=sp[sp>0].min(), max_distance=sp.max())
                 # pred = (pred_init*256.0).astype(np.uint16)
                 # color_depth = self.Colorize(pred, norm_type='LogNorm', offset=1.)
-                color_depth = self.Colorize(pred, min_distance=gt[gt > 0].min(), max_distance=gt.max())
+                color_depth = self.Colorize(pred, min_distance=pred[pred > 0].min(), max_distance=pred.max())
                 
                 sp = sample['dep'].detach()
                 sp = torch.clamp(sp, min=0)
                 sp = sp[0, 0, :, :].data.cpu().numpy()
-                sp_color = self.Colorize(sp, min_distance=sp[sp > 0].min(), max_distance=sp.max())
+                sp_color = self.Colorize(sp, min_distance=sp[sp > 0].min(), max_distance=sp.max(), radius=6)
                 imageio.imwrite(path_save_pred, pred)
                 imageio.imwrite(path_save_color, color_depth)
                 imageio.imwrite(path_save_init_depth, init_color)

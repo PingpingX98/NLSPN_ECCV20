@@ -381,11 +381,16 @@ def test(args):
     pbar = tqdm(total=num_sample)   # 进度条
 
     t_total = 0
-
+    save_idx = args.save_idx
+    num_mask = 20
     for batch, sample in enumerate(loader_test):
         sample = {key: val.cuda() for key, val in sample.items()
-                  if val is not None}                 
-        
+                  if val is not None}
+        if args.save_single:
+            if batch < save_idx * 10:
+                continue
+            if batch > (save_idx + 1) * 10:
+                break
         t0 = time.time()
         output = net(sample)
         t1 = time.time()

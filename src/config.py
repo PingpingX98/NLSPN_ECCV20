@@ -273,6 +273,15 @@ parser.add_argument('--noise_level',
                     default=1,
                     help='Add noise to sparse depth')
 
+
+parser.add_argument('--save_single',
+                    action='store_true',
+                    default=False,
+                     help='Add noise to sparse depth')
+parser.add_argument('--save_idx',
+                    type=float,
+                    default=117,
+                     help='Add noise to sparse depth')
 args = parser.parse_args()
 
 args.num_gpus = len(args.gpus.split(','))
