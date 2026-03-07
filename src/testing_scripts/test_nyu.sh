@@ -1,6 +1,7 @@
 
 ckpt=../checkpoints/NLSPN_NYU.pt
 save_idx=318
+num_masks=100
 # for sample in 1 5 50 100 200 300 400 500 
 # for sample in 1 50 100 200 500 
 #for sample in 5 10 20
@@ -23,12 +24,15 @@ save_idx=318
 #    # --save_full --save_pointcloud_visualization
 #done
 #for sample in 50 100 200 500 1000 2000 5000 10000 20000
-for sample in 10
-do 
+#for sample in 10
+for sample in 1000 5000 10000
+do
     python main.py --dir_data ../datas/nyudepthv2 --data_name NYU  --split_json ../data_json/nyu.json \
     --patch_height 228 --patch_width 304 --gpus 0 --max_depth 10.0 --num_sample $sample \
     --test_only --pretrain $ckpt --preserve_input --legacy \
-    --log_dir ../experiments/mask20p10/ --save_result_only --save_idx ${save_idx} --save_single
+    --log_dir ../experiments/masks${num_masks}p${sample}/ --save_idx ${save_idx} \
+    --num_masks ${num_masks}
+#    --save_single
 done
 
 # do

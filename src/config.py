@@ -277,11 +277,16 @@ parser.add_argument('--noise_level',
 parser.add_argument('--save_single',
                     action='store_true',
                     default=False,
-                     help='Add noise to sparse depth')
+                     help='save single')
 parser.add_argument('--save_idx',
                     type=float,
                     default=117,
-                     help='Add noise to sparse depth')
+                     help='index of saved images')
+
+parser.add_argument('--num_masks',
+                    type=int,
+                    default=1,
+                     help='random sample masks')
 args = parser.parse_args()
 
 args.num_gpus = len(args.gpus.split(','))
