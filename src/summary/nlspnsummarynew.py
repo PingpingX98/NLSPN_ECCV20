@@ -69,7 +69,7 @@ class NLSPNSummarynew(BaseSummary):
 
                 msg += ["{:<s}: {:.5f}  ".format(name, val)]
 
-                if (idx + 1) % 10 == 0:
+                if (idx + 1) % 12 == 0:
                     msg += ["\n             "]
 
             msg = "".join(msg)

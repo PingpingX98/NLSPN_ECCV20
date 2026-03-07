@@ -24,8 +24,8 @@ num_masks=100
 #    # --save_full --save_pointcloud_visualization
 #done
 #for sample in 50 100 200 500 1000 2000 5000 10000 20000
-#for sample in 10
-for sample in 1000 5000 10000
+#for sample in 500
+for sample in 1000 5000
 do
     python main.py --dir_data ../datas/nyudepthv2 --data_name NYU  --split_json ../data_json/nyu.json \
     --patch_height 228 --patch_width 304 --gpus 0 --max_depth 10.0 --num_sample $sample \
