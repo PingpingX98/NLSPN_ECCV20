@@ -131,22 +131,21 @@ def test(args):
 
     t_total = 0.0
     times = []
-
+    torch.cuda.reset_max_memory_allocated(device=0)
+    peak_memory = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
+    print(f"Peak memory usage: {peak_memory_usage:.3f} GB")
     for batch, sample in enumerate(loader_test):
         sample = {key: val.cuda() for key, val in sample.items() if val is not None}
         torch.cuda.reset_max_memory_allocated(device=0)
-        timer = benchmark.Timer(
-            stmt='net(sample)',
-            globals={'net': net, 'sample': sample}
-        )
-        
-        print(timer.timeit(100))
-        break
-    peak_memory = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
-    print(f" Peak memory: {peak_memory:.3f} GB")
-    model = net.module if isinstance(net, torch.nn.DataParallel) else net
-    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"Number of trainable parameters: {trainable_params}")
+        output = net(sample)
+        memory_allocated = torch.cuda.memory_allocated(device=0) / 1024 ** 3  # Convert to GB
+        print(f"Memory allocated: {memory_allocated:.3f} GB")
+
+        # Optionally, measure peak memory usage during profiling
+        peak_memory_usage = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
+        print(f"Peak memory usage: {peak_memory_usage:.3f} GB")
+        if batch > 6:
+            break
 
 
     
