@@ -124,28 +124,26 @@ def test(args):
 
     pbar = tqdm(total=num_sample)
 
-    # 新增 torch.utils.benchmark.Timer 相关代码
-    # 创建 Timer 计时器，命令字符串是 net(sample) ，
-    # 但这里 sample 需要是准备好的CUDA tensor，我们在循环里动态赋值，所以先占位
-    # 这里我们改用循环内创建Timer（更准确），或者用 timeit.Timer 动态测试
-
     t_total = 0.0
     times = []
-    torch.cuda.reset_max_memory_allocated(device=0)
-    peak_memory = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
-    print(f"Peak memory usage: {peak_memory_usage:.3f} GB")
-    for batch, sample in enumerate(loader_test):
-        sample = {key: val.cuda() for key, val in sample.items() if val is not None}
+    with torch.no_grad():
         torch.cuda.reset_max_memory_allocated(device=0)
-        output = net(sample)
-        memory_allocated = torch.cuda.memory_allocated(device=0) / 1024 ** 3  # Convert to GB
-        print(f"Memory allocated: {memory_allocated:.3f} GB")
-
-        # Optionally, measure peak memory usage during profiling
         peak_memory_usage = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
         print(f"Peak memory usage: {peak_memory_usage:.3f} GB")
-        if batch > 6:
-            break
+        torch.cuda.reset_max_memory_allocated(device=0)
+
+        peak_memory_usage1 = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
+        print(f"Peak memory usage: {peak_memory_usage1:.3f} GB")
+        for batch, sample in enumerate(loader_test):
+            sample = {key: val.cuda() if isinstance(val, torch.Tensor) else val for key, val in sample.items()}
+            torch.cuda.reset_max_memory_allocated(device=0)
+
+            output = net(sample)
+            peak_memory_usage = torch.cuda.max_memory_allocated(device=0) / 1024 ** 3
+            print(f"Peak memory usage: {peak_memory_usage:.3f} GB")
+            if batch > 6:
+                break
+        print(f"Peak memory usage: {peak_memory_usage-peak_memory_usage1:.3f} GB")
 
 
     
